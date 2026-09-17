@@ -7,18 +7,27 @@ import { app } from "@/server";
 const restaurants = [
 	{
 		id: 1,
-		name: "Sakura Ramen",
-		region: "Midtown",
-		dishType: "Japanese",
-		rating: 4.8,
-		reviewCount: 215,
+		name: "Tim Ho Wan",
+		region: "Kowloon",
+		district: "Sham Shui Po",
+		dishType: "Dim Sum",
+		rating: 4.3,
+		reviewCount: 5230,
+	},
+	{
+		id: 2,
+		name: "Samsen",
+		region: "Hong Kong Island",
+		district: "Wan Chai",
+		dishType: "Thai",
+		rating: 4.6,
+		reviewCount: 2140,
 	},
 ];
 
 const dishes = [
-	{ id: 1, restaurantId: 1, dishName: "Tonkotsu Ramen", price: 15.5 },
-	{ id: 2, restaurantId: 1, dishName: "Pork Gyoza", price: 7 },
-	{ id: 3, restaurantId: 1, dishName: "Matcha Ice Cream", price: 4.5 },
+	{ id: 1, restaurantId: 1, dishName: "Baked BBQ Pork Bun", price: 32, photoUrl: "https://example.com/bun.jpg" },
+	{ id: 2, restaurantId: 1, dishName: "Har Gow", price: 40, photoUrl: "https://example.com/garow.jpg" },
 ];
 
 vi.mock("@/api/restaurant/restaurantRepository", () => ({
@@ -27,12 +36,20 @@ vi.mock("@/api/restaurant/restaurantRepository", () => ({
 			return restaurants;
 		}
 
+		async findRandomAsync() {
+			return restaurants[0];
+		}
+
 		async findByIdAsync(id: number) {
 			return restaurants.find((restaurant) => restaurant.id === id) ?? null;
 		}
 
 		async findDishesByRestaurantIdAsync(id: number) {
 			return id === 1 ? dishes : [];
+		}
+
+		async findFilterOptionsAsync() {
+			return { regions: [], districtsByRegion: {}, dishTypes: [] };
 		}
 	},
 }));
@@ -44,6 +61,27 @@ describe("Restaurant API endpoints", () => {
 
 		expect(response.statusCode).toBe(StatusCodes.OK);
 		expect(responseBody.responseObject).toEqual(restaurants);
+	});
+
+	it("accepts filter query parameters", async () => {
+		const response = await request(app).get("/restaurants?region=Kowloon&dishType=Dim%20Sum&minRating=4");
+
+		expect(response.statusCode).toBe(StatusCodes.OK);
+		expect(response.body.responseObject).toEqual(restaurants);
+	});
+
+	it("rejects an invalid minimum rating", async () => {
+		const response = await request(app).get("/restaurants?minRating=9");
+
+		expect(response.statusCode).toBe(StatusCodes.BAD_REQUEST);
+	});
+
+	it("returns a random restaurant", async () => {
+		const response = await request(app).get("/restaurants/random?region=Kowloon");
+		const responseBody: ServiceResponse<(typeof restaurants)[number]> = response.body;
+
+		expect(response.statusCode).toBe(StatusCodes.OK);
+		expect(responseBody.responseObject).toEqual(restaurants[0]);
 	});
 
 	it("returns a restaurant's dishes", async () => {

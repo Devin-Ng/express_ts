@@ -62,6 +62,42 @@ For a visual guide, watch the [video demo](https://github.com/user-attachments/a
 - Building: `pnpm build`
 - Production Mode: Set `NODE_ENV="production"` in `.env` then `pnpm build && pnpm start:prod`
 
+## 🇭🇰 Hong Kong restaurant API (RR app)
+
+This project also powers the **RR** React Native app (random Hong Kong
+restaurant picker). The restaurant feature was extended with:
+
+- `district` on `restaurants` and `photo_url` on `main_dishes`
+- a curated seed of 135 real Hong Kong restaurants (202 signature dishes)
+  across all 18 districts
+
+### Database scripts
+
+```bash
+pnpm db:migrate   # applies database/migrations/*.sql (tracked in _migrations)
+pnpm db:seed      # truncates and reloads the curated Hong Kong dataset
+```
+
+### Endpoints
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| GET | `/restaurants` | Optional filters: `region`, `district`, `dishType`, `minRating` |
+| GET | `/restaurants/random` | Same filters, one random match |
+| GET | `/restaurants/:id` | Includes `district` |
+| GET | `/restaurants/:id/dishes` | Includes `photoUrl` |
+| GET | `/meta/filters` | `regions`, `districtsByRegion`, `dishTypes` for the app filter UI |
+
+Example:
+
+```bash
+curl "http://localhost:8080/restaurants/random?region=Kowloon&minRating=4"
+curl "http://localhost:8080/meta/filters"
+```
+
+> Ratings and review counts are demo values. Restaurant names, districts and
+> cuisines reflect real Hong Kong places; dish photos are Unsplash stock images.
+
 ## 🤝 Feedback and Contributions
 
 We'd love to hear your feedback and suggestions for further improvements. Feel free to contribute and join us in making backend development cleaner and faster!

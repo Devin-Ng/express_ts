@@ -25,9 +25,7 @@ function mapUser(row: UserRow): User {
 
 export class UserRepository {
 	async findAllAsync(): Promise<User[]> {
-		const [rows] = await database.query<UserRow[]>(
-			"SELECT id, name, email, age, created_at, updated_at FROM users",
-		);
+		const [rows] = await database.query<UserRow[]>("SELECT id, name, email, age, created_at, updated_at FROM users");
 
 		return rows.map(mapUser);
 	}

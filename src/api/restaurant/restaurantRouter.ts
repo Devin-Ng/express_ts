@@ -4,7 +4,9 @@ import { z } from "zod";
 
 import {
 	GetRestaurantSchema,
+	GetRestaurantsSchema,
 	MainDishSchema,
+	RestaurantFilterSchema,
 	RestaurantSchema,
 } from "@/api/restaurant/restaurantModel";
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
@@ -21,10 +23,22 @@ restaurantRegistry.registerPath({
 	method: "get",
 	path: "/restaurants",
 	tags: ["Restaurant"],
+	request: { query: RestaurantFilterSchema },
 	responses: createApiResponse(z.array(RestaurantSchema), "Success"),
 });
 
-restaurantRouter.get("/", restaurantController.getRestaurants);
+restaurantRouter.get("/", validateRequest(GetRestaurantsSchema), restaurantController.getRestaurants);
+
+restaurantRegistry.registerPath({
+	method: "get",
+	path: "/restaurants/random",
+	tags: ["Restaurant"],
+	request: { query: RestaurantFilterSchema },
+	responses: createApiResponse(RestaurantSchema, "Success"),
+});
+
+// Registered before "/:id" so it is not captured as an id parameter
+restaurantRouter.get("/random", validateRequest(GetRestaurantsSchema), restaurantController.getRandomRestaurant);
 
 restaurantRegistry.registerPath({
 	method: "get",
@@ -44,8 +58,4 @@ restaurantRegistry.registerPath({
 	responses: createApiResponse(z.array(MainDishSchema), "Success"),
 });
 
-restaurantRouter.get(
-	"/:id/dishes",
-	validateRequest(GetRestaurantSchema),
-	restaurantController.getRestaurantDishes,
-);
+restaurantRouter.get("/:id/dishes", validateRequest(GetRestaurantSchema), restaurantController.getRestaurantDishes);
