@@ -3,13 +3,14 @@ import type { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import pino from "pino";
 import pinoHttp from "pino-http";
+import pretty from "pino-pretty";
 
 import { env } from "@/common/utils/envConfig";
 
-const logger = pino({
-	level: env.isProduction ? "info" : "debug",
-	transport: env.isProduction ? undefined : { target: "pino-pretty" },
-});
+const logger = pino(
+	{ level: env.isProduction ? "info" : "debug" },
+	env.isProduction ? undefined : pretty(),
+);
 
 const getLogLevel = (status: number) => {
 	if (status >= StatusCodes.INTERNAL_SERVER_ERROR) return "error";
