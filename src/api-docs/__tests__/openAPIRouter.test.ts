@@ -20,6 +20,14 @@ describe("OpenAPI Router", () => {
 			expect(response.body).toEqual(expectedResponse);
 		});
 
+		it("does not publish the disabled user API", () => {
+			const document = generateOpenAPIDocument();
+
+			expect(Object.keys(document.paths)).not.toContain("/users");
+			expect(Object.keys(document.paths)).not.toContain("/users/{id}");
+			expect(JSON.stringify(document.components ?? {})).not.toContain('"User"');
+		});
+
 		it("should serve the Swagger UI", async () => {
 			// Act
 			const response = await request(app).get("/");

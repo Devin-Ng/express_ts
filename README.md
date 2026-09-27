@@ -71,14 +71,27 @@ restaurant picker). The restaurant feature was extended with:
 - a curated seed of 135 real Hong Kong restaurants (202 signature dishes)
   across all 18 districts
 
+### Local MySQL setup on Windows
+
+See [MYSQL_SETUP.md](MYSQL_SETUP.md) for checking MySQL Server in Workbench, creating the local database/user, setting `.env`, and running `pnpm db:check`. Workbench alone does not install the database server.
+
 ### Database scripts
 
+Use the read-only inventory before choosing a database path. The historic `001_hk_schema.sql` contains a catalog delete; the migration runner now fails closed while it is pending, before executing any migration-file SQL. Do not bypass it. `db:seed:sample` is additive; `db:seed` is a separately guarded disposable reset. See [DATABASE_SAFETY_RUNBOOK.md](DATABASE_SAFETY_RUNBOOK.md) and [MYSQL_SETUP.md](MYSQL_SETUP.md).
+
 ```bash
-pnpm db:migrate   # applies database/migrations/*.sql (tracked in _migrations)
-pnpm db:seed      # truncates and reloads the curated Hong Kong dataset
+pnpm db:check          # read-only connectivity check; does not check tables
+pnpm db:inventory      # read-only metadata/count/migration inventory
+pnpm db:migrate        # refuses the historic pending 001 chain; reviewed paths only
+pnpm db:seed:sample    # additive sample import; preserves matching records and IDs
+pnpm db:seed           # destructive reset; explicit disposable-only gate
 ```
 
+The inventory script is configured in `package.json`. Never run migration, reset, or fixture commands against valuable data. P0 uses Node 22.23.2 and pnpm 10.33.0; install with `pnpm install --frozen-lockfile`. The backend `pnpm-lock.yaml` is canonical; do not use the old ignored npm lockfile.
+
 ### Endpoints
+
+The unrelated boilerplate `/users` routes are intentionally disabled and are not published in OpenAPI. RR has no account/authentication scope.
 
 | Method | Path | Notes |
 | --- | --- | --- |

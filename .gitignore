@@ -14,6 +14,11 @@ build
 dist-ssr
 *.local
 .env
+.env.*
+!.env.template
+# pnpm-lock.yaml is the canonical, tracked backend lockfile.
+package-lock.json
+yarn.lock
 
 # Editor directories and files
 !.vscode/extensions.json

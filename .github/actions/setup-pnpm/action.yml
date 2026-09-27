@@ -13,6 +13,11 @@ runs:
         echo "pnpm=$PNPM_VERSION" >> $GITHUB_OUTPUT
         echo "node=$NODE_VERSION" >> $GITHUB_OUTPUT
 
+    - name: Setup Node from the project baseline
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ steps.versions.outputs.node }}
+
     - name: Setup pnpm
       uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4
       with:

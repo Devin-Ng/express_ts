@@ -1,0 +1,12 @@
+.git
+node_modules
+.env
+.env.*
+!.env.template
+*.log
+coverage
+# Keep private backups and credential files out of the build context.
+*.pem
+*.key
+*.sql.gz
+*.dump

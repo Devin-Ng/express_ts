@@ -12,8 +12,13 @@
 		"start:dev": "node --import=tsx --watch src/index.ts",
 		"start:prod": "node dist/index.js",
 		"check": "biome check --write",
+		"check:ci": "biome check .",
+		"typecheck": "tsc --noEmit",
+		"db:inventory": "node --import=tsx src/database/inventoryCli.ts",
+		"db:check": "node --import=tsx src/database/check.ts",
 		"db:migrate": "node --import=tsx src/database/migrate.ts",
 		"db:seed": "node --import=tsx src/database/seed/seed.ts",
+		"db:seed:sample": "node --import=tsx src/database/seed/seedSample.ts",
 		"test": "vitest run",
 		"test:cov": "vitest run --coverage"
 	},
@@ -61,6 +66,9 @@
 		"dts": true,
 		"splitting": false,
 		"skipNodeModulesBundle": true
+	},
+	"engines": {
+		"node": ">=22.11.0 <23"
 	},
 	"packageManager": "pnpm@10.33.0"
 }

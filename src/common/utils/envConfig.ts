@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const envSchema = z.object({
 	NODE_ENV: z.enum(["development", "production", "test"]).default("production"),
@@ -20,9 +20,14 @@ const envSchema = z.object({
 
 	DB_PORT: z.coerce.number().int().positive().default(3306),
 
-	DB_USER: z.string().min(1).default("root"),
+	DB_USER: z.string().min(1),
 
-	DB_PASSWORD: z.string().default(""),
+	DB_PASSWORD: z
+		.string()
+		.min(1)
+		.refine((value) => !value.startsWith("REPLACE_WITH_"), {
+			message: "Set a private database password; template placeholders are not credentials",
+		}),
 
 	DB_NAME: z.string().min(1).default("restaurant"),
 });
@@ -30,7 +35,7 @@ const envSchema = z.object({
 const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
-	console.error("❌ Invalid environment variables:", parsedEnv.error.format());
+	console.error("Invalid environment configuration. Check required values in .env.template; values are not logged.");
 	throw new Error("Invalid environment variables");
 }
 

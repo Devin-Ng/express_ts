@@ -1,12 +1,26 @@
 import type { ResultSetHeader } from "mysql2";
 
 import { database } from "@/common/database";
+import { assertDisposableResetAllowed } from "@/database/resetSafety";
 import { hkRestaurants } from "@/database/seed/hkRestaurants";
 
-async function seed(): Promise<void> {
+async function resetDisposableDatabase(): Promise<void> {
+	// Evaluate the guard before acquiring a pool connection or issuing SQL.
+	assertDisposableResetAllowed({
+		NODE_ENV: process.env.NODE_ENV,
+		RR_DISPOSABLE_DB: process.env.RR_DISPOSABLE_DB,
+		RR_RESET_CONFIRMATION: process.env.RR_RESET_CONFIRMATION,
+		DB_NAME: process.env.DB_NAME,
+		RR_RESET_DATABASE: process.env.RR_RESET_DATABASE,
+	});
 	const connection = await database.getConnection();
 
 	try {
+		const [target] = await connection.query("SELECT DATABASE() AS name");
+		const selected = (target as Array<{ name: string }>)[0]?.name;
+		if (selected !== process.env.RR_RESET_DATABASE || !selected?.startsWith("rr_disposable_")) {
+			throw new Error("Connected database does not match the disposable reset target");
+		}
 		await connection.beginTransaction();
 
 		// main_dishes rows are removed via ON DELETE CASCADE
@@ -42,7 +56,7 @@ async function seed(): Promise<void> {
 		await connection.commit();
 
 		const dishCount = hkRestaurants.reduce((total, restaurant) => total + restaurant.dishes.length, 0);
-		console.log(`Seed complete: ${hkRestaurants.length} restaurants, ${dishCount} main dishes.`);
+		console.log(`Disposable reset complete: ${hkRestaurants.length} restaurants, ${dishCount} main dishes.`);
 	} catch (error) {
 		await connection.rollback();
 		throw error;
@@ -52,7 +66,11 @@ async function seed(): Promise<void> {
 	}
 }
 
-seed().catch((error) => {
-	console.error("Seed failed:", error);
-	process.exit(1);
+resetDisposableDatabase().catch((error: unknown) => {
+	if (error instanceof Error && "code" in error && error.code === "RESET_SAFETY_REFUSAL") {
+		console.error(`Reset refused: ${error.message}`);
+	} else {
+		console.error("Disposable database reset failed.");
+	}
+	process.exitCode = 1;
 });
